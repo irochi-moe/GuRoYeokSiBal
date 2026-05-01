@@ -1,7 +1,7 @@
 package moe.irochi.plugins.guroyeoksibal.listeners;
 
 import moe.irochi.plugins.guroyeoksibal.AhoCorasick;
-import moe.irochi.plugins.guroyeoksibal.GuRoYeokSibal;
+import moe.irochi.plugins.guroyeoksibal.GuRoYeokSiBal;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -15,9 +15,9 @@ import java.text.Normalizer;
 @SuppressWarnings("deprecation")
 public class ChatFilterListener implements Listener {
 
-    private final GuRoYeokSibal plugin;
+    private final GuRoYeokSiBal plugin;
 
-    public ChatFilterListener(GuRoYeokSibal plugin) {
+    public ChatFilterListener(GuRoYeokSiBal plugin) {
         this.plugin = plugin;
     }
 

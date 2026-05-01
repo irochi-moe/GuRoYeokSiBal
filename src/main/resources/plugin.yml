@@ -1,8 +1,8 @@
-name: GuRoYeokSibal
+name: GuRoYeokSiBal
 version: '${version}'
 author: Irochi
 website: irochi.moe
-main: moe.irochi.plugins.guroyeoksibal.GuRoYeokSibal
+main: moe.irochi.plugins.guroyeoksibal.GuRoYeokSiBal
 description: '${description}'
 api-version: '1.21'
 folia-supported: true
@@ -11,7 +11,7 @@ softdepend:
 
 commands:
   guroyeoksibal:
-    description: GuRoYeokSibal의 기본 명령어입니다.
+    description: GuRoYeokSiBal의 기본 명령어입니다.
     usage: /guroyeoksibal <reload|status>
     permission: irochi.guroyeoksibal.reload
 

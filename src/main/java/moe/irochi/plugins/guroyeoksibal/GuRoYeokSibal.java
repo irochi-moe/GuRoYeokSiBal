@@ -1,6 +1,6 @@
 package moe.irochi.plugins.guroyeoksibal;
 
-import moe.irochi.plugins.guroyeoksibal.commands.GuRoYeokSibalCommand;
+import moe.irochi.plugins.guroyeoksibal.commands.GuRoYeokSiBalCommand;
 import moe.irochi.plugins.guroyeoksibal.hooks.TownyChatHook;
 import moe.irochi.plugins.guroyeoksibal.listeners.ChatFilterListener;
 import net.kyori.adventure.text.Component;
@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-public final class GuRoYeokSibal extends JavaPlugin {
+public final class GuRoYeokSiBal extends JavaPlugin {
 
     private volatile AhoCorasick matcher;
     private volatile int loadedWordCount = 0;
@@ -43,7 +43,7 @@ public final class GuRoYeokSibal extends JavaPlugin {
 
         PluginCommand command = getCommand("guroyeoksibal");
         if (command != null) {
-            GuRoYeokSibalCommand commandHandler = new GuRoYeokSibalCommand(this);
+            GuRoYeokSiBalCommand commandHandler = new GuRoYeokSiBalCommand(this);
             command.setExecutor(commandHandler);
             command.setTabCompleter(commandHandler);
         } else {
@@ -160,7 +160,7 @@ public final class GuRoYeokSibal extends JavaPlugin {
 
     public Component getNotifyMessage(String playerName, String message) {
         String format = getConfig().getString(
-                "notify-format", "<yellow>[GuRoYeokSibal] <red>{player}<yellow>: <gray>{message}");
+                "notify-format", "<yellow>[GuRoYeokSiBal] <red>{player}<yellow>: <gray>{message}");
         String sanitizedMessage = message.replaceAll("§[0-9a-fk-orA-FK-OR]", "");
         String formatted = format
                 .replace("{player}", MiniMessage.miniMessage().escapeTags(playerName))

@@ -1,6 +1,6 @@
 package moe.irochi.plugins.guroyeoksibal.commands;
 
-import moe.irochi.plugins.guroyeoksibal.GuRoYeokSibal;
+import moe.irochi.plugins.guroyeoksibal.GuRoYeokSiBal;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -10,13 +10,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class GuRoYeokSibalCommand implements CommandExecutor, TabCompleter {
+public class GuRoYeokSiBalCommand implements CommandExecutor, TabCompleter {
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
-    private final GuRoYeokSibal plugin;
+    private final GuRoYeokSiBal plugin;
 
-    public GuRoYeokSibalCommand(GuRoYeokSibal plugin) {
+    public GuRoYeokSiBalCommand(GuRoYeokSiBal plugin) {
         this.plugin = plugin;
     }
 
@@ -31,7 +31,7 @@ public class GuRoYeokSibalCommand implements CommandExecutor, TabCompleter {
                         return true;
                     }
                     plugin.reloadBannedWords();
-                    sender.sendMessage(MM.deserialize("<green>GuRoYeokSibal: 설정과 욕설 목록을 다시 불러왔습니다."));
+                    sender.sendMessage(MM.deserialize("<green>GuRoYeokSiBal: 설정과 욕설 목록을 다시 불러왔습니다."));
                 }
                 case "status" -> {
                     if (!sender.hasPermission("irochi.guroyeoksibal.reload")) {
@@ -41,7 +41,7 @@ public class GuRoYeokSibalCommand implements CommandExecutor, TabCompleter {
                     int words = plugin.getLoadedWordCount();
                     String mode = plugin.getActionMode();
                     String notify = plugin.isNotifyStaff() ? "<green>ON" : "<red>OFF";
-                    sender.sendMessage(MM.deserialize("<yellow>[GuRoYeokSibal] <white>패턴 <green>" + words
+                    sender.sendMessage(MM.deserialize("<yellow>[GuRoYeokSiBal] <white>패턴 <green>" + words
                             + "<white>개 | 모드 <green>" + mode
                             + "<white> | 알림 수신 <aqua>" + notify));
                 }
