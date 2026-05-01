@@ -1,0 +1,27 @@
+name: GuRoYeokSibal
+version: '${version}'
+author: Irochi
+website: irochi.moe
+main: moe.irochi.plugins.guroyeoksibal.GuRoYeokSibal
+description: '${description}'
+api-version: '1.21'
+folia-supported: true
+softdepend:
+  - TownyChat
+
+commands:
+  guroyeoksibal:
+    description: GuRoYeokSibal의 기본 명령어입니다.
+    usage: /guroyeoksibal <reload|status>
+    permission: irochi.guroyeoksibal.reload
+
+permissions:
+  irochi.guroyeoksibal.bypass:
+    description: 욕설 필터 우회
+    default: false
+  irochi.guroyeoksibal.reload:
+    description: 설정 및 욕설 목록 리로드
+    default: op
+  irochi.guroyeoksibal.notify:
+    description: 욕설 감지 시 인게임 알림 수신
+    default: op
