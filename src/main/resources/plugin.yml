@@ -4,7 +4,7 @@ author: Irochi
 website: irochi.moe
 main: moe.irochi.plugins.guroyeoksibal.GuRoYeokSiBal
 description: '${description}'
-api-version: '1.21'
+api-version: '1.20'
 folia-supported: true
 softdepend:
   - TownyChat
