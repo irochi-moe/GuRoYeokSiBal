@@ -13,6 +13,21 @@ notify-staff: true
 # 유저가 욕설을 사용했을 때 관리자가 받을 알림 메시지 형식을 설정합니다.
 notify-format: '<yellow>[GuRoYeokSiBal] <red>{player}<yellow>: <gray>{message}'
 
+# 귓속말 필터링 여부를 설정합니다.
+filter-whisper: true
+
+# 필터링할 귓속말 명령어 목록 ( / 없이 입력)
+whisper-commands:
+  - 'msg'
+  - 'message'
+  - 'tell'
+  - 'w'
+  - 'whisper'
+  - 'pm'
+  - 'dm'
+  - 'r'
+  - 'reply'
+
 # TownyChat 연동: 필터링할 채널 이름 목록 (대소문자 무시)
 # '*' 를 넣으면 모든 채널을 필터링합니다.
 # TownyChat이 설치되지 않은 경우 이 설정은 무시됩니다.

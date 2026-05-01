@@ -154,6 +154,14 @@ public final class GuRoYeokSiBal extends JavaPlugin {
         return MiniMessage.miniMessage().deserialize(msg);
     }
 
+    public boolean isFilterWhisper() {
+        return getConfig().getBoolean("filter-whisper", true);
+    }
+
+    public List<String> getWhisperCommands() {
+        return getConfig().getStringList("whisper-commands");
+    }
+
     public boolean isNotifyStaff() {
         return getConfig().getBoolean("notify-staff", true);
     }

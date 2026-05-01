@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import java.text.Normalizer;
 
@@ -58,6 +59,65 @@ public class ChatFilterListener implements Listener {
         event.setCancelled(true);
         player.sendMessage(plugin.getBlockMessage());
         notifyStaff(player, original, effectiveMatch);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onCommand(PlayerCommandPreprocessEvent event) {
+        if (event.isCancelled()) return;
+        if (!plugin.isFilterWhisper()) return;
+
+        Player player = event.getPlayer();
+        if (player.hasPermission("irochi.guroyeksibal.bypass")) return;
+
+        String raw = event.getMessage();
+        String lower = raw.toLowerCase();
+
+        String whisperMessage = null;
+        String commandPrefix = null;
+
+        for (String cmd : plugin.getWhisperCommands()) {
+            String prefix = "/" + cmd.toLowerCase() + " ";
+            if (lower.startsWith(prefix)) {
+                String afterCmd = raw.substring(prefix.length());
+                int spaceIdx = afterCmd.indexOf(' ');
+                if (spaceIdx >= 0) {
+                    commandPrefix = raw.substring(0, prefix.length() + spaceIdx + 1);
+                    whisperMessage = afterCmd.substring(spaceIdx + 1);
+                }
+                break;
+            }
+        }
+
+        if (whisperMessage == null || whisperMessage.isEmpty()) return;
+
+        AhoCorasick matcher = plugin.getMatcher();
+        if (matcher == null) return;
+
+        String normalized = Normalizer.normalize(whisperMessage, Normalizer.Form.NFC).toLowerCase();
+        String stripped = stripFillers(normalized);
+
+        String matchedWord = matcher.findFirstMatch(normalized);
+        boolean detectedInRaw = matchedWord != null;
+
+        if (!detectedInRaw && !stripped.equals(normalized)) {
+            matchedWord = matcher.findFirstMatch(stripped);
+        }
+
+        if (matchedWord == null) return;
+        final String effectiveMatch = matchedWord;
+
+        if ("REPLACE".equalsIgnoreCase(plugin.getActionMode()) && detectedInRaw) {
+            String replaced = matcher.replaceAll(normalized, plugin.getReplaceChar());
+            if (!replaced.equals(normalized)) {
+                event.setMessage(commandPrefix + replaced);
+                notifyStaff(player, whisperMessage, effectiveMatch);
+                return;
+            }
+        }
+
+        event.setCancelled(true);
+        player.sendMessage(plugin.getBlockMessage());
+        notifyStaff(player, whisperMessage, effectiveMatch);
     }
 
     private void notifyStaff(Player offender, String originalMessage, String matchedWord) {
