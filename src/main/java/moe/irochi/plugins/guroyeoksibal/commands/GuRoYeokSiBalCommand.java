@@ -40,8 +40,8 @@ public class GuRoYeokSiBalCommand implements CommandExecutor, TabCompleter {
                     }
                     int words = plugin.getLoadedWordCount();
                     String mode = plugin.getActionMode();
-                    String notify = plugin.isNotifyStaff() ? "<green>ON" : "<red>OFF";
-                    sender.sendMessage(MM.deserialize("<yellow>[GuRoYeokSiBal] <white>패턴 <green>" + words
+                    String notify = plugin.isNotifyStaff() ? "<green>켜짐" : "<red>꺼짐";
+                    sender.sendMessage(MM.deserialize("<yellow>[GuRoYeokSiBal] <white>키워드 <green>" + words
                             + "<white>개 | 모드 <green>" + mode
                             + "<white> | 알림 수신 <aqua>" + notify));
                 }
