@@ -79,10 +79,13 @@ public class ChatFilterListener implements Listener {
             String prefix = "/" + cmd.toLowerCase() + " ";
             if (lower.startsWith(prefix)) {
                 String afterCmd = raw.substring(prefix.length());
-                int spaceIdx = afterCmd.indexOf(' ');
+                int spaceIdx = cmd.contains(" ") ? -1 : afterCmd.indexOf(' ');
                 if (spaceIdx >= 0) {
                     commandPrefix = raw.substring(0, prefix.length() + spaceIdx + 1);
                     whisperMessage = afterCmd.substring(spaceIdx + 1);
+                } else {
+                    commandPrefix = raw.substring(0, prefix.length());
+                    whisperMessage = afterCmd;
                 }
                 break;
             }
