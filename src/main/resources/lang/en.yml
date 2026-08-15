@@ -1,0 +1,28 @@
+# ============================================================
+#  GuRoYeokSiBal messages (English)
+#
+#  Supports MiniMessage formatting. Players automatically see
+#  the file matching their client language.
+#  Add a language: copy this file to lang/<code>.yml (e.g. ja.yml, zh.yml)
+# ============================================================
+
+# Sent when a profane message is blocked (BLOCK mode)
+block-message: '<red>You cannot send messages containing profanity.'
+
+# Sent when an all-caps message is blocked (block-all-caps)
+caps-block-message: '<red>All caps messages are not allowed.'
+
+# Sent while chat cooldown is active (placeholders: {seconds})
+cooldown-message: '<red>Chat cooldown active. Try again in <yellow>{seconds}<red> seconds.'
+
+# Staff notification on profanity detection (placeholders: {player}, {message})
+notify-format: '<aqua>[GuRoYeokSiBal] <red>{player}<yellow>: <gray>{message}'
+
+# /guroyeoksibal command responses
+command:
+  reload: '<aqua>[GuRoYeokSiBal] <green>Reloaded config and profanity list.'
+  # Placeholders: {words}, {mode}, {notify}
+  status: '<aqua>[GuRoYeokSiBal] <white>Keywords <green>{words}<white> | Mode <green>{mode}<white> | Notify <aqua>{notify}'
+  status-on: '<green>ON'
+  status-off: '<red>OFF'
+  usage: '<aqua>[GuRoYeokSiBal] <yellow>Usage: /guroyeoksibal \<reload|status>'

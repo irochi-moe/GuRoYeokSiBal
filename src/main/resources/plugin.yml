@@ -1,0 +1,37 @@
+name: GuRoYeokSiBal
+version: '${version}'
+author: Irochi
+website: irochi.moe
+main: moe.irochi.plugins.guroyeoksibal.GuRoYeokSiBal
+description: '${description}'
+api-version: '1.20'
+folia-supported: true
+softdepend:
+  - TownyChat
+  - Azurite
+
+commands:
+  guroyeoksibal:
+    description: GuRoYeokSiBal의 기본 명령어입니다.
+    usage: /guroyeoksibal <reload|status>
+    permission: irochi.guroyeoksibal.reload
+
+permissions:
+  irochi.guroyeoksibal.cooldown.pro:
+    description: 채팅 쿨타임 등급 (config의 chat-cooldown-tiers 기본 등급)
+    default: false
+  irochi.guroyeoksibal.cooldown.proplus:
+    description: 채팅 쿨타임 등급 (config의 chat-cooldown-tiers 기본 등급, 등급 추가 시 irochi.guroyeoksibal.cooldown.<등급이름> 사용)
+    default: false
+  irochi.guroyeoksibal.cooldown.bypass:
+    description: 채팅 쿨타임 우회
+    default: false
+  irochi.guroyeoksibal.bypass:
+    description: 욕설 필터 우회
+    default: false
+  irochi.guroyeoksibal.reload:
+    description: 설정 및 욕설 목록 리로드, 상태 조회 (/guroyeoksibal 명령어 전체)
+    default: op
+  irochi.guroyeoksibal.notify:
+    description: 욕설 감지 시 인게임 알림 수신
+    default: op

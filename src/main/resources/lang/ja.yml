@@ -1,0 +1,28 @@
+# ============================================================
+#  GuRoYeokSiBal メッセージ (日本語)
+#
+#  MiniMessage形式対応。プレイヤーのクライアント言語に合う
+#  ファイルが自動的に適用されます。
+#  言語追加: このファイルを lang/<コード>.yml にコピー (例: zh.yml)
+# ============================================================
+
+# 暴言を含むチャットがブロックされたとき (BLOCKモード)
+block-message: '<red>暴言を含むチャットは送信できません。'
+
+# 大文字のみのチャットがブロックされたとき (block-all-caps)
+caps-block-message: '<red>大文字のみのチャットは送信できません。'
+
+# チャットクールタイム中 (変数: {seconds})
+cooldown-message: '<red>チャットクールタイム中です。<yellow>{seconds}<red>秒後にもう一度お試しください。'
+
+# 暴言検知時の管理者通知 (変数: {player}, {message})
+notify-format: '<aqua>[GuRoYeokSiBal] <red>{player}<yellow>: <gray>{message}'
+
+# /guroyeoksibal コマンドの応答
+command:
+  reload: '<aqua>[GuRoYeokSiBal] <green>設定と暴言リストを再読み込みしました。'
+  # 変数: {words}, {mode}, {notify}
+  status: '<aqua>[GuRoYeokSiBal] <white>キーワード <green>{words}<white>件 | モード <green>{mode}<white> | 通知 <aqua>{notify}'
+  status-on: '<green>オン'
+  status-off: '<red>オフ'
+  usage: '<aqua>[GuRoYeokSiBal] <yellow>使い方: /guroyeoksibal \<reload|status>'

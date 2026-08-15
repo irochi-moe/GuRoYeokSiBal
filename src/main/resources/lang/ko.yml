@@ -1,0 +1,27 @@
+# ============================================================
+#  GuRoYeokSiBal 메시지 (한국어)
+#
+#  MiniMessage 형식 지원, 플레이어의 클라이언트 언어에 맞는 파일이 자동 적용됩니다.
+#  새 언어 추가: 이 파일을 lang/<언어코드>.yml 로 복사 (예: ja.yml, zh.yml)
+# ============================================================
+
+# BLOCK 모드에서 욕설 채팅이 차단됐을 때
+block-message: '<red>욕설이 포함된 채팅은 전송할 수 없습니다.'
+
+# 전체 대문자 채팅이 차단됐을 때 (block-all-caps)
+caps-block-message: '<red>전체 대문자 채팅은 전송할 수 없습니다.'
+
+# 채팅 쿨타임 중일 때 (변수: {seconds})
+cooldown-message: '<red>채팅 쿨타임입니다. <yellow>{seconds}<red>초 후에 다시 시도하세요.'
+
+# 욕설 감지 시 관리자 알림 (변수: {player}, {message})
+notify-format: '<aqua>[GuRoYeokSiBal] <red>{player}<yellow>: <gray>{message}'
+
+# /guroyeoksibal 명령어 응답
+command:
+  reload: '<aqua>[GuRoYeokSiBal] <green>설정과 욕설 목록을 다시 불러왔습니다.'
+  # 변수: {words}, {mode}, {notify}
+  status: '<aqua>[GuRoYeokSiBal] <white>키워드 <green>{words}<white>개 | 모드 <green>{mode}<white> | 알림 수신 <aqua>{notify}'
+  status-on: '<green>켜짐'
+  status-off: '<red>꺼짐'
+  usage: '<aqua>[GuRoYeokSiBal] <yellow>사용법: /guroyeoksibal \<reload|status>'

@@ -1,0 +1,112 @@
+# ============================================================
+#  GuRoYeokSiBal 설정
+#
+#  욕설 목록: 플러그인 폴더의 *.csv (default.csv 외 자유롭게 추가)
+#  메시지 문구: lang/<언어코드>.yml (클라이언트 언어 자동 적용)
+#  /guroyeoksibal reload 로 모든 설정을 다시 불러옵니다.
+# ============================================================
+
+# 클라이언트 언어에 맞는 번역 파일이 없을 때 사용할 기본 언어
+fallback-language: en
+
+# ------------------------------------------------------------
+#  욕설 필터
+# ------------------------------------------------------------
+
+# BLOCK: 메시지 전체 차단 / REPLACE: 욕설 부분만 검열
+action: BLOCK
+
+# REPLACE 모드에서 욕설을 대체할 문자 (1글자)
+replace-char: '*'
+
+# 욕설 감지 시 irochi.guroyeoksibal.notify 권한자에게 알림 전송
+notify-staff: true
+
+# 영문 대문자가 min-letters 이상이고 다른 글자(한글, 소문자 등)가 없는 채팅 차단
+block-all-caps: true
+block-all-caps-min-letters: 6
+
+# ------------------------------------------------------------
+#  명령어 필터
+# ------------------------------------------------------------
+
+# 채팅 외 명령어(귓속말, 팀/마을 이름 생성 등)의 인자도 필터링
+filter-commands: true
+
+# 첫 인자(대상 이름)를 건너뛰고 나머지를 검사할 명령어 ( / 없이 입력)
+# 예) /msg <상대> <내용>  ->  <내용>만 검사
+# 두 목록에 모두 있는 명령어(/w 등)는 인자 2개 이상이면 대상 건너뛰기, 1개면 전체 검사
+commands-with-target:
+  - 'msg'
+  - 'message'
+  - 'tell'
+  - 'w'
+  - 'whisper'
+  - 'pm'
+  - 'dm'
+  - 'm'
+
+# 인자 전체를 검사할 명령어 (여러 단어 명령어 가능)
+commands-full:
+  - 'r'
+  - 'reply'
+  - 'w'
+  - 'team create'
+  - 't create'
+  - 'faction create'
+  - 'f create'
+  - 'team rename'
+  - 't rename'
+  - 'faction rename'
+  - 'f rename'
+  - 'town create'
+  - 'town new'
+  - 't new'
+  - 'nation create'
+  - 'nation new'
+  - 'n create'
+  - 'n new'
+  - '국가 생성'
+
+# ------------------------------------------------------------
+#  TownyChat / Azurite 연동
+#  채널/채팅 이름은 대소문자 무시, '*' = 전체
+#  미설치 플러그인의 설정은 무시되며, 둘 다 설치된 경우 둘 다 해당할 때만 적용
+# ------------------------------------------------------------
+
+# 필터링할 TownyChat 채널 (channels.yml 기준: general, town, nation, alliance, admin, mod, local)
+towny-filtered-channels:
+  - 'general'
+  - 'local'
+
+# 필터링할 Azurite 채팅 종류 (public, team, ally, officer, co_leader, staff)
+# Azurite는 public 외 채팅의 이벤트 취소를 무시하므로, public 외 종류는
+# BLOCK/쿨타임 차단 없이 REPLACE 검열만 적용됩니다.
+azurite-filtered-chats:
+  - 'public'
+
+# ------------------------------------------------------------
+#  채팅 쿨타임 (TownyChat / Azurite 연동 채팅만)
+#  irochi.guroyeoksibal.cooldown.bypass 권한자는 제외
+# ------------------------------------------------------------
+
+chat-cooldown-enabled: true
+
+# 기본 쿨타임(초), 0 이하면 기본 등급 쿨타임 없음
+chat-cooldown-seconds: 15
+
+# 등급별 쿨타임: irochi.guroyeoksibal.cooldown.<등급이름> 권한자에게 적용
+# 등급은 자유롭게 추가 가능, 여러 등급 보유 시 가장 짧은 쿨타임 적용
+# 0 이하면 해당 등급은 쿨타임 없음 ('bypass'는 등급 이름으로 사용 불가)
+chat-cooldown-tiers:
+  proplus: 7
+  pro: 3
+
+# 쿨타임을 적용할 TownyChat 채널
+towny-cooldown-channels:
+  - 'general'
+  - 'local'
+
+# 쿨타임을 적용할 Azurite 채팅 종류
+azurite-cooldown-chats:
+  - 'public'
