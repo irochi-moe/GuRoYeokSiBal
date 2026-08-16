@@ -1,6 +1,8 @@
 package moe.irochi.plugins.guroyeoksibal;
 
+import io.papermc.paper.event.player.AsyncChatEvent;
 import moe.irochi.plugins.guroyeoksibal.api.ChatBlockedEvent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,6 +16,11 @@ import java.util.Locale;
 import java.util.function.Consumer;
 
 public class ChatFilterListener implements Listener {
+
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
+
+    // Paper는 legacy 이벤트 결과를 같은 스레드의 AsyncChatEvent로 넘기므로, 같은 메시지의 재검사 방지
+    private static final ThreadLocal<Boolean> LEGACY_HANDLED = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     private final GuRoYeokSiBal plugin;
 
@@ -34,8 +41,28 @@ public class ChatFilterListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     @SuppressWarnings("deprecation")
     public void onChatMonitor(AsyncPlayerChatEvent event) {
+        LEGACY_HANDLED.set(Boolean.TRUE);
         if (!plugin.isAzuriteHooked() && event.isCancelled()) return;
         plugin.commitCooldown(event.getPlayer());
+    }
+
+    // legacy 이벤트를 거치지 않은 채팅(플러그인이 직접 발생시킨 AsyncChatEvent)만 처리
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onModernChat(AsyncChatEvent event) {
+        if (LEGACY_HANDLED.get()) return;
+        String original = LEGACY.serialize(event.message());
+        if (processChat(event.getPlayer(), original, msg -> event.message(LEGACY.deserialize(msg)))) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onModernChatMonitor(AsyncChatEvent event) {
+        if (LEGACY_HANDLED.get()) {
+            LEGACY_HANDLED.set(Boolean.FALSE);
+            return;
+        }
+        if (!event.isCancelled()) plugin.commitCooldown(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -72,9 +99,10 @@ public class ChatFilterListener implements Listener {
     }
 
     private boolean processChat(Player player, String original, Consumer<String> replacer) {
-        // Azurite가 취소를 무시하는 채팅은 차단 대신 REPLACE 검열만 적용 (config.yml 참고)
-        boolean cancellable = plugin.isChatCancellable(player, original);
-        long remaining = plugin.checkCooldown(player, original);
+        GuRoYeokSiBal.ChatDecision decision = plugin.evaluateChat(player, original);
+        // 취소를 무시하는 채팅(Azurite의 public 외 등)은 차단 대신 REPLACE 검열만 적용 (config.yml 참고)
+        boolean cancellable = decision.cancellable();
+        long remaining = plugin.checkCooldown(player, decision.cooldownKey());
         if (remaining > 0 && cancellable) {
             player.sendMessage(plugin.getCooldownMessage(player, remaining));
             fireBlocked(player, original, ChatBlockedEvent.Reason.COOLDOWN);
@@ -82,7 +110,7 @@ public class ChatFilterListener implements Listener {
             return true;
         }
 
-        ProfanityResult profanity = handleProfanity(player, original, !cancellable);
+        ProfanityResult profanity = handleProfanity(player, original, !cancellable, decision.filter());
         if (profanity.isBlocked()) {
             plugin.abortCooldown(player);
             plugin.clearTownyDirectedChat(player);
@@ -92,11 +120,11 @@ public class ChatFilterListener implements Listener {
         return false;
     }
 
-    private ProfanityResult handleProfanity(Player player, String original, boolean replaceOnly) {
+    private ProfanityResult handleProfanity(Player player, String original, boolean replaceOnly, boolean shouldFilter) {
         if (player.hasPermission(GuRoYeokSiBal.PERM_BYPASS)) {
             return ProfanityResult.PASS;
         }
-        if (!plugin.shouldFilter(player, original)) {
+        if (!shouldFilter) {
             return ProfanityResult.PASS;
         }
         return evaluate(player, original, replaceOnly);

@@ -1,6 +1,8 @@
 package moe.irochi.plugins.guroyeoksibal;
 
 import moe.irochi.plugins.guroyeoksibal.hooks.AzuriteChatHook;
+import moe.irochi.plugins.guroyeoksibal.hooks.ChatHook;
+import moe.irochi.plugins.guroyeoksibal.hooks.EssentialsChatHook;
 import moe.irochi.plugins.guroyeoksibal.hooks.TownyChatHook;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -28,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class GuRoYeokSiBal extends JavaPlugin {
 
@@ -52,6 +55,8 @@ public final class GuRoYeokSiBal extends JavaPlugin {
     private volatile Map<String, Integer> cooldownTiers = Map.of();
     private volatile TownyChatHook townyChatHook;
     private volatile AzuriteChatHook azuriteChatHook;
+    private volatile EssentialsChatHook essentialsChatHook;
+    private volatile List<ChatHook> chatHooks = List.of();
     private LanguageManager languageManager;
     private Logger logger;
     private final ConcurrentHashMap<UUID, Map<String, Long>> lastChat = new ConcurrentHashMap<>();
@@ -88,31 +93,41 @@ public final class GuRoYeokSiBal extends JavaPlugin {
         getServer().getGlobalRegionScheduler().run(this, task -> hook.clearDirectedChat(player));
     }
 
-    public boolean isChatCancellable(Player player, String message) {
-        AzuriteChatHook hook = azuriteChatHook;
-        return hook == null || hook.isCancellable(player, message);
+    // cooldownKey가 null이면 쿨타임 미적용
+    public record ChatDecision(boolean filter, boolean cancellable, String cooldownKey) {}
+
+    // 훅별 채널 확인은 비용이 있으므로 메시지 1건당 1회만 호출
+    public ChatDecision evaluateChat(Player player, String message) {
+        List<ChatHook> hooks = chatHooks;
+        boolean filter = true;
+        boolean cancellable = true;
+        boolean cooldownApplies = true;
+        StringBuilder key = new StringBuilder();
+        for (ChatHook hook : hooks) {
+            ChatHook.Decision decision = hook.evaluate(player, message);
+            filter = filter && decision.filter();
+            cancellable = cancellable && decision.cancellable();
+            cooldownApplies = cooldownApplies && decision.cooldownApplies();
+            if (!key.isEmpty()) key.append('|');
+            key.append(decision.cooldownKey());
+        }
+        String cooldownKey = !cooldownApplies ? null : hooks.isEmpty() ? "default" : key.toString();
+        return new ChatDecision(filter, cancellable, cooldownKey);
     }
 
+    // 외부 플러그인용 공개 API (시그니처 유지)
     public boolean shouldFilter(Player player, String message) {
-        if (townyChatHook != null && !townyChatHook.shouldFilter(player, message)) {
-            return false;
-        }
-        if (azuriteChatHook != null && !azuriteChatHook.shouldFilter(player, message)) {
-            return false;
-        }
-        return true;
+        return evaluateChat(player, message).filter();
     }
 
-    public long checkCooldown(Player player, String message) {
+    public long checkCooldown(Player player, String key) {
         UUID uuid = player.getUniqueId();
         pendingCooldown.remove(uuid);
 
+        if (key == null) return 0;
         if (!isChatCooldownEnabled()) return 0;
         int seconds = getEffectiveCooldownSeconds(player);
         if (seconds <= 0) return 0;
-
-        String key = resolveCooldownKey(player, message);
-        if (key == null) return 0;
 
         long now = System.nanoTime();
         sweepCooldowns(now);
@@ -153,22 +168,6 @@ public final class GuRoYeokSiBal extends JavaPlugin {
                 return channels.isEmpty() ? null : channels;
             });
         }
-    }
-
-    private String resolveCooldownKey(Player player, String message) {
-        StringBuilder key = new StringBuilder();
-        if (townyChatHook != null) {
-            TownyChatHook.CooldownInfo towny = townyChatHook.evaluateCooldown(player, message);
-            if (!towny.applies()) return null;
-            key.append(towny.key());
-        }
-        if (azuriteChatHook != null) {
-            AzuriteChatHook.CooldownInfo azurite = azuriteChatHook.evaluateCooldown(player, message);
-            if (!azurite.applies()) return null;
-            if (!key.isEmpty()) key.append('|');
-            key.append(azurite.key());
-        }
-        return key.isEmpty() ? "default" : key.toString();
     }
 
     private String describeChannelList(List<String> channels) {
@@ -225,6 +224,23 @@ public final class GuRoYeokSiBal extends JavaPlugin {
             azuriteChatHook = null;
             logger.warning("Azurite 연동 초기화 실패: " + e.getMessage());
         }
+    }
+
+    private void initEssentialsChatHook(boolean isReload) {
+        Plugin essentials = getServer().getPluginManager().getPlugin("Essentials");
+        if (essentials == null || !getServer().getPluginManager().isPluginEnabled("EssentialsChat")) {
+            essentialsChatHook = null;
+            return;
+        }
+
+        essentialsChatHook = new EssentialsChatHook(
+                essentials,
+                getFilteredSet("essentials-filtered-chats"),
+                getFilteredSet("essentials-cooldown-chats"));
+        String prefix = isReload ? "EssentialsX Chat 갱신: " : "EssentialsX Chat 감지: ";
+        logger.info(prefix + "필터: " + describeChannelList(getConfig().getStringList("essentials-filtered-chats"))
+                + " | 쿨타임: " + describeChannelList(getConfig().getStringList("essentials-cooldown-chats"))
+                + " | chat.radius: " + essentialsChatHook.getRadius());
     }
 
     private void loadBannedWords(boolean isReload) {
@@ -301,6 +317,11 @@ public final class GuRoYeokSiBal extends JavaPlugin {
         loadBannedWords(isReload);
         initTownyChatHook(isReload);
         initAzuriteChatHook(isReload);
+        initEssentialsChatHook(isReload);
+        chatHooks = Stream.of(townyChatHook, azuriteChatHook, essentialsChatHook)
+                .filter(Objects::nonNull)
+                .map(ChatHook.class::cast)
+                .toList();
     }
 
     public AhoCorasick getActiveMatcher() {

@@ -73,9 +73,9 @@ commands-full:
   - '국가 생성'
 
 # ------------------------------------------------------------
-#  TownyChat / Azurite 연동
+#  TownyChat / Azurite / EssentialsX Chat 연동
 #  채널/채팅 이름은 대소문자 무시, '*' = 전체
-#  미설치 플러그인의 설정은 무시되며, 둘 다 설치된 경우 둘 다 해당할 때만 적용
+#  미설치 플러그인의 설정은 무시되며, 여러 개가 설치된 경우 모두 해당할 때만 적용
 # ------------------------------------------------------------
 
 # 필터링할 TownyChat 채널 (channels.yml 기준: general, town, nation, alliance, admin, mod, local)
@@ -89,8 +89,17 @@ towny-filtered-channels:
 azurite-filtered-chats:
   - 'public'
 
+# 필터링할 EssentialsX Chat 채팅 종류
+# Essentials config.yml의 chat.radius가 0이면 모든 채팅이 global,
+# 1 이상이면 기본 local / '!' shout / '?' question (해당 권한 보유 시)
+essentials-filtered-chats:
+  - 'global'
+  - 'local'
+  - 'shout'
+  - 'question'
+
 # ------------------------------------------------------------
-#  채팅 쿨타임 (TownyChat / Azurite 연동 채팅만)
+#  채팅 쿨타임 (TownyChat / Azurite / EssentialsX Chat 연동 채팅만)
 #  irochi.guroyeoksibal.cooldown.bypass 권한자는 제외
 # ------------------------------------------------------------
 
@@ -114,3 +123,10 @@ towny-cooldown-channels:
 # 쿨타임을 적용할 Azurite 채팅 종류
 azurite-cooldown-chats:
   - 'public'
+
+# 쿨타임을 적용할 EssentialsX Chat 채팅 종류
+essentials-cooldown-chats:
+  - 'global'
+  - 'local'
+  - 'shout'
+  - 'question'

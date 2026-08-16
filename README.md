@@ -19,7 +19,7 @@
 
 **연동**
 
-- [TownyChat](https://github.com/TownyAdvanced/TownyChat) / [Azurite](https://builtbybit.com/resources/azurite-hcf-core-fully-configurable.24593) 채널/채팅 종류별 필터와 쿨타임 (Azurite의 public 외 채팅은 취소가 불가능해 REPLACE 검열만 적용)
+- [TownyChat](https://github.com/TownyAdvanced/TownyChat) / [Azurite](https://builtbybit.com/resources/azurite-hcf-core-fully-configurable.24593) / [EssentialsX Chat](https://essentialsx.net/) 채널·채팅 종류별 필터와 쿨타임 (Azurite의 public 외 채팅은 취소가 불가능해 REPLACE 검열만 적용, EssentialsX는 `chat.radius` 기준 global/local/shout/question 구분)
 - 권한 기반 등급별 채팅 쿨타임 (등급 자유 추가)
 - 다른 플러그인용 `ChatBlockedEvent` API (예: [SinBalSinGo](https://github.com/irochi-moe/SinBalSinGo))
 - 한국어, 영어, 일본어 메시지, 플레이어 클라이언트 언어 자동 적용
@@ -55,7 +55,7 @@
 
 - Paper 1.20.1 이상
 - Java 17 이상
-- (선택) TownyChat, Azurite
+- (선택) TownyChat, Azurite, EssentialsX Chat
 
 ## 빌드
 

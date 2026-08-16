@@ -13,11 +13,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-public class AzuriteChatHook {
+public class AzuriteChatHook implements ChatHook {
 
     private static final String[] SHORTCUT_CHAT_TYPES = {"TEAM", "ALLY", "OFFICER", "CO_LEADER"};
-
-    public record CooldownInfo(boolean applies, String key) {}
 
     private final Plugin azuritePlugin;
     private final Set<String> filteredChats;
@@ -55,21 +53,15 @@ public class AzuriteChatHook {
         loadShortcuts();
     }
 
-    public boolean shouldFilter(Player player, String message) {
-        return matches(resolveChatType(player, message), filteredChats);
-    }
-
-    // Azurite는 public 외 채팅의 이벤트 취소를 무시함
-    public boolean isCancellable(Player player, String message) {
+    @Override
+    public Decision evaluate(Player player, String message) {
         String chatType = resolveChatType(player, message);
-        return chatType == null || "PUBLIC".equals(chatType);
-    }
-
-    public CooldownInfo evaluateCooldown(Player player, String message) {
-        String chatType = resolveChatType(player, message);
-        boolean applies = matches(chatType, cooldownChats);
-        String key = chatType == null ? "azurite:default" : "azurite:" + chatType.toLowerCase(Locale.ROOT);
-        return new CooldownInfo(applies, key);
+        return new Decision(
+                matches(chatType, filteredChats),
+                // Azurite는 public 외 채팅의 이벤트 취소를 무시함
+                chatType == null || "PUBLIC".equals(chatType),
+                matches(chatType, cooldownChats),
+                chatType == null ? "azurite:default" : "azurite:" + chatType.toLowerCase(Locale.ROOT));
     }
 
     private boolean matches(String chatType, Set<String> configured) {

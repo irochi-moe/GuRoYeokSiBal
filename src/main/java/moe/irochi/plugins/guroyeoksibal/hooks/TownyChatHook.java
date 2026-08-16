@@ -10,9 +10,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.logging.Logger;
 
-public class TownyChatHook {
-
-    public record CooldownInfo(boolean applies, String key) {}
+public class TownyChatHook implements ChatHook {
 
     private final Set<String> filteredChannels;
     private final Set<String> cooldownChannels;
@@ -26,15 +24,14 @@ public class TownyChatHook {
         this.logger = logger;
     }
 
-    public boolean shouldFilter(Player player, String message) {
-        return matches(getChannelName(player, message), filteredChannels);
-    }
-
-    public CooldownInfo evaluateCooldown(Player player, String message) {
+    @Override
+    public Decision evaluate(Player player, String message) {
         String channelName = getChannelName(player, message);
-        boolean applies = matches(channelName, cooldownChannels);
-        String key = channelName == null ? "towny:default" : "towny:" + channelName;
-        return new CooldownInfo(applies, key);
+        return new Decision(
+                matches(channelName, filteredChannels),
+                true,
+                matches(channelName, cooldownChannels),
+                channelName == null ? "towny:default" : "towny:" + channelName);
     }
 
     // 이벤트 취소 시 TownyChat의 directedChat 제거(ignoreCancelled 핸들러)가 스킵되므로 직접 제거

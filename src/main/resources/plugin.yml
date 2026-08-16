@@ -9,6 +9,8 @@ folia-supported: true
 softdepend:
   - TownyChat
   - Azurite
+  - Essentials
+  - EssentialsChat
 
 commands:
   guroyeoksibal:
