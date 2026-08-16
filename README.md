@@ -65,6 +65,12 @@
 
 빌드 결과물은 `build/libs/GuRoYeokSiBal-<version>.jar`에 생성됩니다.
 
+## 통계
+
+익명 사용 통계를 [bStats](https://bstats.org/plugin/bukkit/GuRoYeokSiBal/33411)로 전송합니다. 서버 버전, 플레이어 수, Java 버전 같은 정보만 수집하며 채팅 내용이나 금칙어 목록은 보내지 않습니다.
+
+어떤 서버 버전과 환경에서 쓰이는지 참고하는 용도라 그대로 두면 개발에 도움이 됩니다. 끄려면 `config.yml`의 `bstats`를 `false`로 두거나, `plugins/bStats/config.yml`에서 서버 전체 통계를 끄면 됩니다. 서버 재시작 후 적용됩니다.
+
 ## 라이선스
 
 이 프로젝트는 [GPL v3](LICENSE.md) 라이선스를 따릅니다.

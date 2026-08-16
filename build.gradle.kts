@@ -1,5 +1,6 @@
 plugins {
     java
+    id("com.gradleup.shadow") version "9.6.1"
 }
 
 group = providers.gradleProperty("group").get()
@@ -27,6 +28,7 @@ configurations.all {
 }
 
 dependencies {
+    implementation("org.bstats:bstats-bukkit:3.2.1")
     compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
     compileOnly("com.github.LlmDl:Towny:0.100.4.0")
     compileOnly("com.github.TownyAdvanced:TownyChat:0.116")
@@ -51,6 +53,15 @@ tasks {
         manifest {
             attributes["paperweight-mappings-namespace"] = "mojang"
         }
+    }
+
+    shadowJar {
+        archiveClassifier.set("")
+        relocate("org.bstats", "moe.irochi.plugins.guroyeoksibal.bstats")
+    }
+
+    build {
+        dependsOn(shadowJar)
     }
 
     withType<JavaCompile>().configureEach {

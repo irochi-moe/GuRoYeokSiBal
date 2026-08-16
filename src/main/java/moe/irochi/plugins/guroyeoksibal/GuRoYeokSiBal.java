@@ -4,6 +4,7 @@ import moe.irochi.plugins.guroyeoksibal.hooks.AzuriteChatHook;
 import moe.irochi.plugins.guroyeoksibal.hooks.TownyChatHook;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -70,6 +71,10 @@ public final class GuRoYeokSiBal extends JavaPlugin {
         PluginCommand command = Objects.requireNonNull(getCommand("guroyeoksibal"));
         command.setExecutor(handler);
         command.setTabCompleter(handler);
+
+        if (getConfig().getBoolean("bstats", true)) {
+            new Metrics(this, 33411);
+        }
     }
 
     public boolean isAzuriteHooked() {
