@@ -90,7 +90,7 @@ azurite-filtered-chats:
 
 # 필터링할 EssentialsX Chat 채팅 종류
 # Essentials config.yml의 chat.radius가 0이면 모든 채팅이 global,
-# 1 이상이면 기본 local / '!' shout / '?' question (해당 권한 보유 시)
+# 1 이상이면 기본 local / '!' shout / '?' question
 essentials-filtered-chats:
   - 'global'
   - 'local'

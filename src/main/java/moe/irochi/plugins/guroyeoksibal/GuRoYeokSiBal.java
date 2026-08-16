@@ -345,6 +345,7 @@ public final class GuRoYeokSiBal extends JavaPlugin {
     }
 
     private void loadAll(boolean isReload) {
+        ConfigUpdater.sync(this);
         // validateConfig()가 cooldownTiers를 읽으므로 loadCooldownTiers()가 먼저
         loadCooldownTiers();
         validateConfig();
