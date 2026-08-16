@@ -32,6 +32,7 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
     compileOnly("com.github.LlmDl:Towny:0.100.4.0")
     compileOnly("com.github.TownyAdvanced:TownyChat:0.116")
+    compileOnly("com.github.Zrips:CMI-API:9.8.6.4")
 }
 
 tasks {

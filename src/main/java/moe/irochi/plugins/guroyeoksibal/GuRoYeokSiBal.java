@@ -1,6 +1,7 @@
 package moe.irochi.plugins.guroyeoksibal;
 
 import moe.irochi.plugins.guroyeoksibal.hooks.AzuriteChatHook;
+import moe.irochi.plugins.guroyeoksibal.hooks.CMIChatHook;
 import moe.irochi.plugins.guroyeoksibal.hooks.ChatHook;
 import moe.irochi.plugins.guroyeoksibal.hooks.EssentialsChatHook;
 import moe.irochi.plugins.guroyeoksibal.hooks.TownyChatHook;
@@ -56,6 +57,7 @@ public final class GuRoYeokSiBal extends JavaPlugin {
     private volatile TownyChatHook townyChatHook;
     private volatile AzuriteChatHook azuriteChatHook;
     private volatile EssentialsChatHook essentialsChatHook;
+    private volatile CMIChatHook cmiChatHook;
     private volatile List<ChatHook> chatHooks = List.of();
     private LanguageManager languageManager;
     private Logger logger;
@@ -84,6 +86,15 @@ public final class GuRoYeokSiBal extends JavaPlugin {
 
     public boolean isAzuriteHooked() {
         return azuriteChatHook != null;
+    }
+
+    public boolean isCMIHooked() {
+        return cmiChatHook != null;
+    }
+
+    // Azurite와 CMI는 이벤트 취소가 정상 전달 경로(취소 후 자체 발송)
+    public boolean resendsCancelledChat() {
+        return azuriteChatHook != null || cmiChatHook != null;
     }
 
     public void clearTownyDirectedChat(Player player) {
@@ -243,6 +254,37 @@ public final class GuRoYeokSiBal extends JavaPlugin {
                 + " | chat.radius: " + essentialsChatHook.getRadius());
     }
 
+    private void initCMIChatHook(boolean isReload) {
+        Plugin cmi = getServer().getPluginManager().getPlugin("CMI");
+        if (cmi == null || !cmi.isEnabled()) {
+            cmiChatHook = null;
+            return;
+        }
+
+        // 채팅 처리를 다른 플러그인에 맡긴 서버(홈/킷 등 용도로만 CMI 사용)는 연동 제외
+        if (!isCMIChatFormatEnabled()) {
+            cmiChatHook = null;
+            logger.info("CMI 감지: ModifyChatFormat이 꺼져 있어 연동하지 않습니다.");
+            return;
+        }
+
+        cmiChatHook = new CMIChatHook(
+                getFilteredSet("cmi-filtered-chats"),
+                getFilteredSet("cmi-cooldown-chats"),
+                logger);
+        String prefix = isReload ? "CMI 갱신: " : "CMI 감지: ";
+        logger.info(prefix + "필터: " + describeChannelList(getConfig().getStringList("cmi-filtered-chats"))
+                + " | 쿨타임: " + describeChannelList(getConfig().getStringList("cmi-cooldown-chats")));
+    }
+
+    private static boolean isCMIChatFormatEnabled() {
+        try {
+            return com.Zrips.CMI.CMI.getInstance().getChatManager().isModifyChatFormat();
+        } catch (RuntimeException | LinkageError e) {
+            return true;
+        }
+    }
+
     private void loadBannedWords(boolean isReload) {
         File dataFolder = getDataFolder();
         dataFolder.mkdirs();
@@ -318,7 +360,8 @@ public final class GuRoYeokSiBal extends JavaPlugin {
         initTownyChatHook(isReload);
         initAzuriteChatHook(isReload);
         initEssentialsChatHook(isReload);
-        chatHooks = Stream.of(townyChatHook, azuriteChatHook, essentialsChatHook)
+        initCMIChatHook(isReload);
+        chatHooks = Stream.of(townyChatHook, azuriteChatHook, essentialsChatHook, cmiChatHook)
                 .filter(Objects::nonNull)
                 .map(ChatHook.class::cast)
                 .toList();

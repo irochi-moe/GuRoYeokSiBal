@@ -28,21 +28,23 @@ public class ChatFilterListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST)
     @SuppressWarnings("deprecation")
     public void onChat(AsyncPlayerChatEvent event) {
         if (plugin.isAzuriteHooked()) return;
+        // CMI는 자체 처리 채팅(채팅방/스태프/거리제한)을 같은 LOWEST에서 먼저 취소하므로 취소돼도 검사
+        if (event.isCancelled() && !plugin.isCMIHooked()) return;
         if (processChat(event.getPlayer(), event.getMessage(), event::setMessage)) {
             event.setCancelled(true);
         }
     }
 
-    // Azurite 훅 경로는 Azurite가 MONITOR에서 취소 후 재발송하므로 취소돼도 커밋
+    // Azurite/CMI 훅 경로는 취소 후 자체 발송이 정상 전달이므로 취소돼도 커밋
     @EventHandler(priority = EventPriority.MONITOR)
     @SuppressWarnings("deprecation")
     public void onChatMonitor(AsyncPlayerChatEvent event) {
         LEGACY_HANDLED.set(Boolean.TRUE);
-        if (!plugin.isAzuriteHooked() && event.isCancelled()) return;
+        if (!plugin.resendsCancelledChat() && event.isCancelled()) return;
         plugin.commitCooldown(event.getPlayer());
     }
 
@@ -65,10 +67,11 @@ public class ChatFilterListener implements Listener {
         if (!event.isCancelled()) plugin.commitCooldown(event.getPlayer());
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH)
     @SuppressWarnings("deprecation")
     public void onLegacyChat(AsyncPlayerChatEvent event) {
         if (!plugin.isAzuriteHooked()) return;
+        if (event.isCancelled() && !plugin.isCMIHooked()) return;
         if (processChat(event.getPlayer(), event.getMessage(), event::setMessage)) {
             event.setCancelled(true);
         }

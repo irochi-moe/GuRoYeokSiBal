@@ -72,7 +72,7 @@ commands-full:
   - '국가 생성'
 
 # ------------------------------------------------------------
-#  TownyChat / Azurite / EssentialsX Chat 연동
+#  TownyChat / Azurite / EssentialsX Chat / CMI 연동
 #  채널/채팅 이름은 대소문자 무시, '*' = 전체
 #  미설치 플러그인의 설정은 무시되며, 여러 개가 설치된 경우 모두 해당할 때만 적용
 # ------------------------------------------------------------
@@ -97,8 +97,16 @@ essentials-filtered-chats:
   - 'shout'
   - 'question'
 
+# 필터링할 CMI 채팅 종류 (CMI 설정 Chat.ModifyChatFormat이 켜진 경우만 연동)
+# staff(스태프 채팅), chatroom(/chat 채팅방 전체), chatroom:<방이름>(특정 방),
+# local(채팅 거리 제한 있음), global(제한 없음 또는 ! 샤우트)
+cmi-filtered-chats:
+  - 'global'
+  - 'local'
+  - 'chatroom'
+
 # ------------------------------------------------------------
-#  채팅 쿨타임 (TownyChat / Azurite / EssentialsX Chat 연동 채팅만)
+#  채팅 쿨타임 (TownyChat / Azurite / EssentialsX Chat / CMI 연동 채팅만)
 #  irochi.guroyeoksibal.cooldown.bypass 권한자는 제외
 # ------------------------------------------------------------
 
@@ -129,3 +137,9 @@ essentials-cooldown-chats:
   - 'local'
   - 'shout'
   - 'question'
+
+# 쿨타임을 적용할 CMI 채팅 종류 (채팅방은 방마다 따로 적용)
+cmi-cooldown-chats:
+  - 'global'
+  - 'local'
+  - 'chatroom'
