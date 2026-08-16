@@ -48,7 +48,6 @@ public class ChatFilterListener implements Listener {
         plugin.commitCooldown(event.getPlayer());
     }
 
-    // legacy 이벤트를 거치지 않은 채팅(플러그인이 직접 발생시킨 AsyncChatEvent)만 처리
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onModernChat(AsyncChatEvent event) {
         if (LEGACY_HANDLED.get()) return;
@@ -103,7 +102,6 @@ public class ChatFilterListener implements Listener {
 
     private boolean processChat(Player player, String original, Consumer<String> replacer) {
         GuRoYeokSiBal.ChatDecision decision = plugin.evaluateChat(player, original);
-        // 취소를 무시하는 채팅(Azurite의 public 외 등)은 차단 대신 REPLACE 검열만 적용 (config.yml 참고)
         boolean cancellable = decision.cancellable();
         long remaining = plugin.checkCooldown(player, decision.cooldownKey());
         if (remaining > 0 && cancellable) {

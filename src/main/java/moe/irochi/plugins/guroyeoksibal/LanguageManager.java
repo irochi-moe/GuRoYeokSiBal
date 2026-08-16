@@ -22,7 +22,6 @@ public class LanguageManager {
 
     private volatile Map<String, YamlConfiguration> languages = new HashMap<>();
     private volatile YamlConfiguration fallback;
-    private volatile YamlConfiguration bundledEnglish;
 
     public LanguageManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -71,7 +70,6 @@ public class LanguageManager {
                 entry.getValue().setDefaults(defaults);
             }
         }
-        this.bundledEnglish = bundled.get("en");
 
         String code = (fallbackLanguage == null || fallbackLanguage.isBlank())
                 ? "en" : fallbackLanguage.trim().toLowerCase(Locale.ROOT);
@@ -103,9 +101,6 @@ public class LanguageManager {
         String value = cfg != null ? cfg.getString(key) : null;
         if (value == null && fallback != null) {
             value = fallback.getString(key);
-        }
-        if (value == null && bundledEnglish != null) {
-            value = bundledEnglish.getString(key);
         }
         return value != null ? value : key;
     }

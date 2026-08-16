@@ -36,8 +36,7 @@ public class CMIChatHook implements ChatHook {
                 chatType == null ? "cmi:default" : "cmi:" + chatType);
     }
 
-    // CMI 내부 컬렉션은 스레드 안전하지 않지만 CMI 자신도 비동기 채팅 스레드에서 같은 방식으로
-    // 읽으므로 동일하게 접근, 실패는 catch로 안전 처리
+    // CMI 내부 컬렉션은 스레드 안전하지 않지만 CMI 자신도 비동기 채팅 스레드에서 같은 방식으로 읽음
     private String resolveChatType(Player player, String message) {
         try {
             ChatFormatManager chat = CMI.getInstance().getChatFormatManager();

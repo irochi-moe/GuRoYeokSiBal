@@ -1,5 +1,6 @@
 package moe.irochi.plugins.guroyeoksibal;
 
+import com.Zrips.CMI.CMI;
 import moe.irochi.plugins.guroyeoksibal.hooks.AzuriteChatHook;
 import moe.irochi.plugins.guroyeoksibal.hooks.CMIChatHook;
 import moe.irochi.plugins.guroyeoksibal.hooks.ChatHook;
@@ -41,7 +42,6 @@ public final class GuRoYeokSiBal extends JavaPlugin {
     public static final String PERM_COOLDOWN_TIER_PREFIX = "irochi.guroyeoksibal.cooldown.";
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
-    private static final long SWEEP_INTERVAL_NANOS = 60L * 1_000_000_000L;
 
     private record PatternSource(String word, String file) {}
 
@@ -104,10 +104,8 @@ public final class GuRoYeokSiBal extends JavaPlugin {
         getServer().getGlobalRegionScheduler().run(this, task -> hook.clearDirectedChat(player));
     }
 
-    // cooldownKey가 null이면 쿨타임 미적용
     public record ChatDecision(boolean filter, boolean cancellable, String cooldownKey) {}
 
-    // 훅별 채널 확인은 비용이 있으므로 메시지 1건당 1회만 호출
     public ChatDecision evaluateChat(Player player, String message) {
         List<ChatHook> hooks = chatHooks;
         boolean filter = true;
@@ -170,7 +168,7 @@ public final class GuRoYeokSiBal extends JavaPlugin {
 
     private void sweepCooldowns(long now) {
         long last = lastCooldownSweep.get();
-        if (now - last < SWEEP_INTERVAL_NANOS) return;
+        if (now - last < 60L * 1_000_000_000L) return;
         if (!lastCooldownSweep.compareAndSet(last, now)) return;
         long ttlNanos = Math.max(60, maxConfiguredCooldownSeconds()) * 1_000_000_000L;
         for (UUID id : lastChat.keySet()) {
@@ -185,6 +183,12 @@ public final class GuRoYeokSiBal extends JavaPlugin {
         if (channels.stream().anyMatch(c -> c.trim().equals("*"))) return "전체";
         if (channels.isEmpty()) return "없음";
         return String.join(", ", channels);
+    }
+
+    private String hookStatus(boolean isReload, String filterKey, String cooldownKey) {
+        return (isReload ? "갱신: " : "감지: ")
+                + "필터: " + describeChannelList(getConfig().getStringList(filterKey))
+                + " | 쿨타임: " + describeChannelList(getConfig().getStringList(cooldownKey));
     }
 
     private Set<String> getFilteredSet(String configKey) {
@@ -204,9 +208,7 @@ public final class GuRoYeokSiBal extends JavaPlugin {
                 getFilteredSet("towny-filtered-channels"),
                 getFilteredSet("towny-cooldown-channels"),
                 logger);
-        String prefix = isReload ? "TownyChat 갱신: " : "TownyChat 감지: ";
-        logger.info(prefix + "필터: " + describeChannelList(getConfig().getStringList("towny-filtered-channels"))
-                + " | 쿨타임: " + describeChannelList(getConfig().getStringList("towny-cooldown-channels")));
+        logger.info("TownyChat " + hookStatus(isReload, "towny-filtered-channels", "towny-cooldown-channels"));
     }
 
     private void initAzuriteChatHook(boolean isReload) {
@@ -222,10 +224,7 @@ public final class GuRoYeokSiBal extends JavaPlugin {
                     getFilteredSet("azurite-filtered-chats"),
                     getFilteredSet("azurite-cooldown-chats"),
                     logger);
-            String prefix = isReload ? "Azurite 갱신: " : "Azurite 감지: ";
-            logger.info(prefix + "필터: " + describeChannelList(getConfig().getStringList("azurite-filtered-chats"))
-                    + " | 쿨타임: " + describeChannelList(getConfig().getStringList("azurite-cooldown-chats")));
-            // Azurite는 public 외 채팅의 이벤트 취소를 무시함
+            logger.info("Azurite " + hookStatus(isReload, "azurite-filtered-chats", "azurite-cooldown-chats"));
             for (String key : List.of("azurite-filtered-chats", "azurite-cooldown-chats")) {
                 if (!getFilteredSet(key).stream().allMatch("public"::equals)) {
                     logger.warning(key + ": public 외 채팅 종류는 차단(BLOCK/쿨타임)이 적용되지 않습니다. REPLACE 검열만 동작합니다.");
@@ -248,9 +247,7 @@ public final class GuRoYeokSiBal extends JavaPlugin {
                 essentials,
                 getFilteredSet("essentials-filtered-chats"),
                 getFilteredSet("essentials-cooldown-chats"));
-        String prefix = isReload ? "EssentialsX Chat 갱신: " : "EssentialsX Chat 감지: ";
-        logger.info(prefix + "필터: " + describeChannelList(getConfig().getStringList("essentials-filtered-chats"))
-                + " | 쿨타임: " + describeChannelList(getConfig().getStringList("essentials-cooldown-chats"))
+        logger.info("EssentialsX Chat " + hookStatus(isReload, "essentials-filtered-chats", "essentials-cooldown-chats")
                 + " | chat.radius: " + essentialsChatHook.getRadius());
     }
 
@@ -261,7 +258,6 @@ public final class GuRoYeokSiBal extends JavaPlugin {
             return;
         }
 
-        // 채팅 처리를 다른 플러그인에 맡긴 서버(홈/킷 등 용도로만 CMI 사용)는 연동 제외
         if (!isCMIChatFormatEnabled()) {
             cmiChatHook = null;
             logger.info("CMI 감지: ModifyChatFormat이 꺼져 있어 연동하지 않습니다.");
@@ -272,14 +268,12 @@ public final class GuRoYeokSiBal extends JavaPlugin {
                 getFilteredSet("cmi-filtered-chats"),
                 getFilteredSet("cmi-cooldown-chats"),
                 logger);
-        String prefix = isReload ? "CMI 갱신: " : "CMI 감지: ";
-        logger.info(prefix + "필터: " + describeChannelList(getConfig().getStringList("cmi-filtered-chats"))
-                + " | 쿨타임: " + describeChannelList(getConfig().getStringList("cmi-cooldown-chats")));
+        logger.info("CMI " + hookStatus(isReload, "cmi-filtered-chats", "cmi-cooldown-chats"));
     }
 
     private static boolean isCMIChatFormatEnabled() {
         try {
-            return com.Zrips.CMI.CMI.getInstance().getChatManager().isModifyChatFormat();
+            return CMI.getInstance().getChatManager().isModifyChatFormat();
         } catch (RuntimeException | LinkageError e) {
             return true;
         }
@@ -361,9 +355,8 @@ public final class GuRoYeokSiBal extends JavaPlugin {
         initAzuriteChatHook(isReload);
         initEssentialsChatHook(isReload);
         initCMIChatHook(isReload);
-        chatHooks = Stream.of(townyChatHook, azuriteChatHook, essentialsChatHook, cmiChatHook)
+        chatHooks = Stream.<ChatHook>of(townyChatHook, azuriteChatHook, essentialsChatHook, cmiChatHook)
                 .filter(Objects::nonNull)
-                .map(ChatHook.class::cast)
                 .toList();
     }
 

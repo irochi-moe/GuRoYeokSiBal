@@ -38,8 +38,7 @@ public class EssentialsChatHook implements ChatHook {
         return radius;
     }
 
-    // EssentialsChat AbstractChatHandler.getChatType()과 동일한 판정
-    // (권한 없는 !는 shout로 분류 후 Essentials가 차단, /shout 토글 사용자는 local로 근사)
+    // EssentialsChat AbstractChatHandler.getChatType()과 동일한 판정 (/shout 토글 사용자는 local로 근사)
     private String resolveChatType(String message) {
         if (radius < 1) return "global";
         if (message == null || message.length() < 2) return "local";
