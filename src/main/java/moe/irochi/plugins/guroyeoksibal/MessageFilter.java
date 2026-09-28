@@ -14,7 +14,10 @@ public final class MessageFilter {
 
     public record Result(String replacement, String matchedPattern) {}
 
-    private record Variant(String text, int[] toNorm, boolean[] head) {}
+    // dedupeOnly: 반복 글자를 합쳐야만 나오는 패턴("ass"→"as"). 실제로 글자가 합쳐진 구간에서만 인정
+    public record Patterns(AhoCorasick matcher, Set<String> dedupeOnly) {}
+
+    private record Variant(String text, int[] toNorm, int[] toNormEnd, boolean[] head) {}
 
     private static final String[] JONG_TO_CHO = {
             "",
@@ -58,26 +61,45 @@ public final class MessageFilter {
     }
 
     public static List<String> patternVariants(String word) {
-        String normalized = normalize(word);
-        String base = fold(normalized).text();
         LinkedHashSet<String> variants = new LinkedHashSet<>();
-        for (String root : foldRoots(base)) {
+        for (String root : foldRoots(foldWord(word))) {
             variants.add(root);
-            variants.add(stripText(root));
+            // "&k"에서 기호를 빼면 "k" 한 글자가 금칙어가 됨
+            if (startsAndEndsWithLetter(root)) {
+                variants.add(stripText(root));
+            }
+        }
+        variants.remove("");
+        return List.copyOf(variants);
+    }
+
+    public static List<String> dedupedVariants(String word) {
+        LinkedHashSet<String> variants = new LinkedHashSet<>();
+        for (String root : foldRoots(foldWord(word))) {
             variants.add(dedupeText(root));
         }
         variants.remove("");
         return List.copyOf(variants);
     }
 
-    public static Result filter(String message, AhoCorasick matcher, boolean replaceMode, char replaceChar) {
+    private static String foldWord(String word) {
+        return fold(normalize(word)).text();
+    }
+
+    private static boolean startsAndEndsWithLetter(String text) {
+        return !text.isEmpty()
+                && Character.isLetter(text.codePointAt(0))
+                && Character.isLetter(text.codePointBefore(text.length()));
+    }
+
+    public static Result filter(String message, Patterns patterns, boolean replaceMode, char replaceChar) {
         String normalized = normalize(message);
         Variant base = fold(normalized);
 
         List<Variant> variants = new ArrayList<>(9);
         Set<String> seen = new HashSet<>();
         for (String rootText : foldRoots(base.text())) {
-            Variant root = new Variant(rootText, base.toNorm(), base.head());
+            Variant root = new Variant(rootText, base.toNorm(), base.toNormEnd(), base.head());
             if (!seen.add(rootText)) continue;
             variants.add(root);
             for (Variant derived : List.of(strip(root), dedupe(root))) {
@@ -90,15 +112,17 @@ public final class MessageFilter {
         String matchedPattern = null;
         boolean[] mask = replaceMode ? new boolean[normalized.length()] : null;
         for (Variant v : variants) {
-            for (int[] m : matcher.findMatches(v.text())) {
+            for (int[] m : patterns.matcher().findMatches(v.text())) {
+                String pattern = v.text().substring(m[0], m[1]);
+                if (patterns.dedupeOnly().contains(pattern) && !hasMerged(v, m)) continue;
                 if (!isValidMatch(v, m, normalized)) continue;
                 if (matchedPattern == null) {
-                    matchedPattern = v.text().substring(m[0], m[1]);
+                    matchedPattern = pattern;
                 }
                 if (!replaceMode) {
                     return new Result(null, matchedPattern);
                 }
-                for (int j = v.toNorm()[m[0]]; j <= v.toNorm()[m[1] - 1]; j++) {
+                for (int j = v.toNorm()[m[0]]; j <= v.toNormEnd()[m[1] - 1]; j++) {
                     mask[j] = true;
                 }
             }
@@ -135,8 +159,17 @@ public final class MessageFilter {
         return sb.toString();
     }
 
+    // 한 음절 안에서는 같은 자모가 연달아 나오지 않아서, 합쳐진 글자만 toNormEnd가 toNorm보다 뒤를 가리킴
+    private static boolean hasMerged(Variant v, int[] m) {
+        for (int k = m[0]; k < m[1]; k++) {
+            if (v.toNormEnd()[k] != v.toNorm()[k]) return true;
+        }
+        return false;
+    }
+
     private static boolean isValidMatch(Variant v, int[] m, String normalized) {
         int[] toNorm = v.toNorm();
+        int end = v.toNormEnd()[m[1] - 1] + 1;
         if (m[0] > 0 && !v.head()[m[0]]) return false;
         if (m[1] < v.text().length() && !v.head()[m[1]]) return false;
         boolean spaced = false;
@@ -153,11 +186,11 @@ public final class MessageFilter {
         // 띄어 쓴 매치("쒸 발")는 앞뒤에 단어 글자가 붙어 있으면 오탐("다시 발로", "10시 발 열차")으로 보고 버림
         if (spaced) {
             if (letterBefore(normalized, toNorm[m[0]], MessageFilter::isWordChar)) return false;
-            if (letterAfter(normalized, toNorm[m[1] - 1] + 1, MessageFilter::isWordChar)) return false;
+            if (letterAfter(normalized, end, MessageFilter::isWordChar)) return false;
         }
         if (isAsciiLetters(v.text(), m[0], m[1])) {
             if (letterBefore(normalized, toNorm[m[0]], MessageFilter::isAsciiLetter)) return false;
-            if (letterAfter(normalized, toNorm[m[1] - 1] + 1, MessageFilter::isAsciiLetter)) return false;
+            if (letterAfter(normalized, end, MessageFilter::isAsciiLetter)) return false;
         }
         return true;
     }
@@ -277,13 +310,15 @@ public final class MessageFilter {
                 sb.append(c);
             }
         }
-        return new Variant(sb.toString(), Arrays.copyOf(map, sb.length()), Arrays.copyOf(head, sb.length()));
+        int[] toNorm = Arrays.copyOf(map, sb.length());
+        return new Variant(sb.toString(), toNorm, toNorm, Arrays.copyOf(head, sb.length()));
     }
 
     private static Variant strip(Variant v) {
         String text = v.text();
         StringBuilder sb = new StringBuilder(text.length());
         int[] map = new int[text.length()];
+        int[] end = new int[text.length()];
         boolean[] head = new boolean[text.length()];
         for (int i = 0; i < text.length(); ) {
             int cp = text.codePointAt(i);
@@ -292,29 +327,36 @@ public final class MessageFilter {
                 for (int k = 0; k < cc; k++) {
                     head[sb.length()] = v.head()[i + k];
                     map[sb.length()] = v.toNorm()[i + k];
+                    end[sb.length()] = v.toNormEnd()[i + k];
                     sb.append(text.charAt(i + k));
                 }
             }
             i += cc;
         }
-        return new Variant(sb.toString(), Arrays.copyOf(map, sb.length()), Arrays.copyOf(head, sb.length()));
+        return new Variant(sb.toString(), Arrays.copyOf(map, sb.length()), Arrays.copyOf(end, sb.length()),
+                Arrays.copyOf(head, sb.length()));
     }
 
     private static Variant dedupe(Variant v) {
         String text = v.text();
         StringBuilder sb = new StringBuilder(text.length());
         int[] map = new int[text.length()];
+        int[] end = new int[text.length()];
         boolean[] head = new boolean[text.length()];
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
             char prev = sb.length() > 0 ? sb.charAt(sb.length() - 1) : 0;
-            if (c == prev) continue;
-            if (c == 'ᄋ' && prev != 0 && i + 1 < text.length() && text.charAt(i + 1) == prev) continue;
+            if (sb.length() > 0 && (c == prev || (c == 'ᄋ' && i + 1 < text.length() && text.charAt(i + 1) == prev))) {
+                end[sb.length() - 1] = v.toNormEnd()[i];
+                continue;
+            }
             head[sb.length()] = v.head()[i];
             map[sb.length()] = v.toNorm()[i];
+            end[sb.length()] = v.toNormEnd()[i];
             sb.append(c);
         }
-        return new Variant(sb.toString(), Arrays.copyOf(map, sb.length()), Arrays.copyOf(head, sb.length()));
+        return new Variant(sb.toString(), Arrays.copyOf(map, sb.length()), Arrays.copyOf(end, sb.length()),
+                Arrays.copyOf(head, sb.length()));
     }
 
     private static String dedupeText(String text) {
@@ -328,7 +370,8 @@ public final class MessageFilter {
     private static Variant plain(String text) {
         boolean[] head = new boolean[text.length()];
         Arrays.fill(head, true);
-        return new Variant(text, new int[text.length()], head);
+        int[] toNorm = new int[text.length()];
+        return new Variant(text, toNorm, toNorm, head);
     }
 
     private static String foldLeet(String text) {

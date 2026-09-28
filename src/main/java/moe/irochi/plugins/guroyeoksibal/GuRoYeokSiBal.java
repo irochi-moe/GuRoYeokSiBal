@@ -45,9 +45,9 @@ public final class GuRoYeokSiBal extends JavaPlugin {
 
     private record PatternSource(String word, String file) {}
 
-    private record WordData(AhoCorasick matcher, int wordCount, Map<String, PatternSource> patterns) {
+    private record WordData(MessageFilter.Patterns matcher, int wordCount, Map<String, PatternSource> patterns) {
         private static final WordData EMPTY =
-                new WordData(AhoCorasick.build(Set.of()), 0, Map.of());
+                new WordData(new MessageFilter.Patterns(AhoCorasick.build(Set.of()), Set.of()), 0, Map.of());
     }
 
     private volatile WordData wordData = WordData.EMPTY;
@@ -301,6 +301,7 @@ public final class GuRoYeokSiBal extends JavaPlugin {
 
         Set<String> words = new HashSet<>();
         Map<String, PatternSource> patterns = new HashMap<>();
+        Map<String, PatternSource> deduped = new HashMap<>();
         boolean anyFailure = false;
 
         for (File csvFile : csvFiles) {
@@ -318,8 +319,12 @@ public final class GuRoYeokSiBal extends JavaPlugin {
                         if (words.add(word)) {
                             fileCount++;
                         }
+                        PatternSource source = new PatternSource(word, csvFile.getName());
                         for (String pattern : MessageFilter.patternVariants(word)) {
-                            patterns.putIfAbsent(pattern, new PatternSource(word, csvFile.getName()));
+                            patterns.putIfAbsent(pattern, source);
+                        }
+                        for (String pattern : MessageFilter.dedupedVariants(word)) {
+                            deduped.putIfAbsent(pattern, source);
                         }
                     }
                 }
@@ -335,7 +340,11 @@ public final class GuRoYeokSiBal extends JavaPlugin {
             return;
         }
 
-        wordData = new WordData(AhoCorasick.build(patterns.keySet()), words.size(), Map.copyOf(patterns));
+        deduped.keySet().removeAll(patterns.keySet());
+        patterns.putAll(deduped);
+
+        MessageFilter.Patterns matcher = new MessageFilter.Patterns(AhoCorasick.build(patterns.keySet()), Set.copyOf(deduped.keySet()));
+        wordData = new WordData(matcher, words.size(), Map.copyOf(patterns));
         logger.info((isReload ? "리로드 완료" : "준비 완료") + ", 단어 " + words.size() + "개");
     }
 
@@ -361,7 +370,7 @@ public final class GuRoYeokSiBal extends JavaPlugin {
                 .toList();
     }
 
-    public AhoCorasick getActiveMatcher() {
+    public MessageFilter.Patterns getActiveMatcher() {
         WordData data = wordData;
         return data.wordCount() == 0 ? null : data.matcher();
     }

@@ -157,7 +157,7 @@ public class ChatFilterListener implements Listener {
     }
 
     private MessageFilter.Result runFilter(String message, boolean replaceOnly) {
-        AhoCorasick matcher = plugin.getActiveMatcher();
+        MessageFilter.Patterns matcher = plugin.getActiveMatcher();
         if (matcher == null) return null;
         boolean replaceMode = replaceOnly || "REPLACE".equals(plugin.getActionMode());
         return MessageFilter.filter(message, matcher, replaceMode, plugin.getReplaceChar());
