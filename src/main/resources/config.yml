@@ -119,8 +119,8 @@ chat-cooldown-seconds: 15
 # 등급은 자유롭게 추가 가능, 여러 등급 보유 시 가장 짧은 쿨타임 적용
 # 0 이하면 해당 등급은 쿨타임 없음 ('bypass'는 등급 이름으로 사용 불가)
 chat-cooldown-tiers:
-  proplus: 7
-  pro: 3
+  proplus: 3
+  pro: 7
 
 # 쿨타임을 적용할 TownyChat 채널
 towny-cooldown-channels:

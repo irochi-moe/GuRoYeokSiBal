@@ -28,10 +28,10 @@ permissions:
     default: false
   irochi.guroyeoksibal.cooldown.bypass:
     description: 채팅 쿨타임 우회
-    default: false
+    default: op
   irochi.guroyeoksibal.bypass:
     description: 욕설 필터 우회
-    default: false
+    default: op
   irochi.guroyeoksibal.reload:
     description: 설정 및 욕설 목록 리로드, 상태 조회 (/guroyeoksibal 명령어 전체)
     default: op
